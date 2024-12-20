@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:appwrite_demo/chat_screen.dart';
 
 import 'core/screens/chat_screen.dart';
+import 'login_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       // home: SizedBox(),
-      home: ChatScreen(),
+      home: LoginScreen(),
     );
   }
 }

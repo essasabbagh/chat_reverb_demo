@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'package:appwrite_demo/const.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:appwrite_demo/const.dart';
 
 class Service {
- static Future<void> sendMessage(String message) async {
+  static Future<void> sendMessage(String message) async {
     try {
       var headers = {
         'Accept': 'application/json',

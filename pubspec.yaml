@@ -47,6 +47,7 @@ dependencies:
   socket_io_client: ^3.0.0
   web_socket_channel: ^2.4.5
   flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.3.3
 
 dev_dependencies:
   flutter_test:
