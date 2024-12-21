@@ -26,20 +26,28 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  late String userId;
+  bool isLoading = false;
   List<ChatMessage> _messages = [];
   late PusherChannelsClient _pusherClient;
-  // late PrivateChannel _channel;
+
+  void getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = prefs.getInt('userId').toString();
+  }
 
   @override
   void initState() {
     super.initState();
+
+    getUserId();
     _initializePusher();
     _loadMessages();
   }
 
   void _initializePusher() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userId');
+
     final token = prefs.getString('token');
     PusherChannelsPackageLogger.enableLogs();
 
@@ -99,6 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
           text: messageData.message,
           user: ChatUser(
             id: messageData.senderId.toString(),
+            profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
           ),
         ),
       );
@@ -115,6 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
           text: messageData.message,
           user: ChatUser(
             id: messageData.senderId.toString(),
+            profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
           ),
         ),
       );
@@ -132,6 +142,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _loadMessages() async {
     try {
+      setState(() {
+        isLoading = true;
+      });
       final messages = await ChatService().getMessages(
         widget.user.id,
       );
@@ -142,6 +155,7 @@ class _ChatScreenState extends State<ChatScreen> {
             text: msg.message,
             user: ChatUser(
               id: msg.senderId.toString(),
+              profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
             ),
           );
         }).toList();
@@ -153,6 +167,10 @@ class _ChatScreenState extends State<ChatScreen> {
           content: Text('Failed to load messages: $e'),
         ),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -185,69 +203,73 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.user.name)),
-      body: DashChat(
-        currentUser: ChatUser(
-          id: '1',
-          firstName: 'Me',
-          lastName: 'User',
-          profileImage: 'https://example.com/avatar.jpg',
-        ),
-        onSend: _sendMessage,
-        messages: _messages,
-        // typingUsers: <ChatUser>[
-        //   ChatUser(
-        //     id: '22',
-        //   ),
-        // ],
-        inputOptions: InputOptions(
-          inputTextStyle: TextStyle(
-            color: Colors.grey.shade900,
-          ),
-          inputDecoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: Colors.grey.shade200,
-            contentPadding: const EdgeInsets.only(
-              left: 18,
-              top: 10,
-              bottom: 10,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25),
-              borderSide: const BorderSide(
-                width: 0,
-                style: BorderStyle.none,
+      body: isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : DashChat(
+              currentUser: ChatUser(
+                id: userId,
+                firstName: 'Me',
+                lastName: '',
+                profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
+              ),
+              onSend: _sendMessage,
+              messages: _messages,
+              // typingUsers: <ChatUser>[
+              //   ChatUser(
+              //     id: '22',
+              //   ),
+              // ],
+              inputOptions: InputOptions(
+                inputTextStyle: TextStyle(
+                  color: Colors.grey.shade900,
+                ),
+                inputDecoration: InputDecoration(
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.grey.shade200,
+                  contentPadding: const EdgeInsets.only(
+                    left: 18,
+                    top: 10,
+                    bottom: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: const BorderSide(
+                      width: 0,
+                      style: BorderStyle.none,
+                    ),
+                  ),
+                ),
+              ),
+              messageOptions: MessageOptions(
+                containerColor: Colors.grey.shade200,
+                currentUserContainerColor: Colors.grey.shade200,
+                currentUserTextColor: Colors.black87,
+                currentUserTimeTextColor: Colors.black38,
+                messagePadding: EdgeInsets.fromLTRB(12, 8, 12, 8),
+                showTime: true,
+                spaceWhenAvatarIsHidden: 6,
+                textColor: Colors.black87,
+                timeFontSize: 8,
+                timePadding: EdgeInsets.only(top: 2),
+                timeTextColor: Colors.black26,
+              ),
+              messageListOptions: MessageListOptions(
+                dateSeparatorBuilder: (date) => DefaultDateSeparator(
+                  date: date,
+                  textStyle: const TextStyle(
+                    color: Colors.black54,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onLoadEarlier: () async {
+                  await Future.delayed(const Duration(seconds: 2));
+                },
+                scrollPhysics: AlwaysScrollableScrollPhysics(),
               ),
             ),
-          ),
-        ),
-        messageOptions: MessageOptions(
-          containerColor: Colors.grey.shade200,
-          currentUserContainerColor: Colors.grey.shade200,
-          currentUserTextColor: Colors.black87,
-          currentUserTimeTextColor: Colors.black38,
-          messagePadding: EdgeInsets.fromLTRB(12, 8, 12, 8),
-          showTime: true,
-          spaceWhenAvatarIsHidden: 6,
-          textColor: Colors.black87,
-          timeFontSize: 8,
-          timePadding: EdgeInsets.only(top: 2),
-          timeTextColor: Colors.black26,
-        ),
-        messageListOptions: MessageListOptions(
-          dateSeparatorBuilder: (date) => DefaultDateSeparator(
-            date: date,
-            textStyle: const TextStyle(
-              color: Colors.black54,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          onLoadEarlier: () async {
-            await Future.delayed(const Duration(seconds: 2));
-          },
-          scrollPhysics: AlwaysScrollableScrollPhysics(),
-        ),
-      ),
       // bottomNavigationBar: Padding(
       //   padding: const EdgeInsets.all(16.0),
       //   child: Row(
