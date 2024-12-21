@@ -68,11 +68,11 @@ class _ChatScreenState extends State<ChatScreen> {
     //   log('data: ${event.data}');
     // });
 
-    final channel = _pusherClient.publicChannel(
-      publicChannel,
+    final publicChannel = _pusherClient.publicChannel(
+      publicChannelName,
     );
 
-    final private = _pusherClient.privateChannel(
+    final privateChannel = _pusherClient.privateChannel(
       'private-chat.$userId',
       authorizationDelegate:
           EndpointAuthorizableChannelTokenAuthorizationDelegate
@@ -90,14 +90,14 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     StreamSubscription<ChannelReadEvent> channelSubscription =
-        channel.bind(eventName).listen((event) {
+        publicChannel.bind(eventName).listen((event) {
       log('public event received: ${event.data}');
       final messageData = json.decode(event.data);
       insertMessage(Message.fromJson(messageData));
     });
 
     StreamSubscription<ChannelReadEvent> privateSubscription =
-        private.bind(eventName).listen((event) {
+        privateChannel.bind(eventName).listen((event) {
       log('Private event received: ${event.data}');
       log('Received private message: $event');
       final messageData = json.decode(event.data);
@@ -106,64 +106,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _pusherClient.onConnectionEstablished.listen((s) {
       log('Connection established');
-      channel.subscribe();
-      private.subscribe();
+      publicChannel.subscribe();
+      privateChannel.subscribe();
     });
 
-    // await _pusherClient.connect();
     // Connect with the client
     unawaited(_pusherClient.connect());
-
-    // Subscribe to private channel
-    // _channel = _pusherClient.privateChannel(
-    //   'chat.22',
-    //   // 'chat.$userId',
-    //   authorizationDelegate:
-    //       EndpointAuthorizableChannelTokenAuthorizationDelegate
-    //           .forPrivateChannel(
-    //     // overrideContentTypeHeader: true,
-    //     authorizationEndpoint: Uri.parse(broadcastingUrl),
-    //     // parser: (response) {
-    //     //   final decoded = jsonDecode(response.body) as Map;
-    //     //   final auth = decoded['auth'] as String;
-    //     //   return PrivateChannelAuthorizationData(
-    //     //     authKey: auth,
-    //     //   );
-    //     // },
-    //     onAuthFailed: (exception, trace) {
-    //       final ex = exception
-    //           as EndpointAuthorizableChannelTokenAuthorizationException;
-    //       log('EXCEPTION: ${ex.message}');
-    //     },
-    //     headers: {
-    //       // "Access-Control-Allow-Origin":
-    //       //     "*", // Required for CORS support to work
-    //       // "Access-Control-Allow-Credentials":
-    //       //     'true', // Required for cookies, authorization headers with HTTPS
-    //       // "Access-Control-Allow-Headers":
-    //       //     "Origin,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,locale",
-    //       // "Access-Control-Allow-Methods": "POST, OPTIONS",
-    //       // 'Accept': 'application/json',
-    //       // 'Content-Type': 'application/json',
-    //       'Authorization': 'Bearer $token', // Send user's auth token
-    //     },
-    //   ),
-    // );
-
-    /*   _channel.bind('App\\Events\\MessageSent').listen((event) {
-      log('Received private message: $event');
-      final messageData = json.decode(event.data);
-      setState(() {
-        _messages.add(Message.fromJson(messageData));
-      });
-    });
-
-    _pusherClient.onConnectionEstablished.listen((_) {
-      log('Connection established');
-      _channel.subscribeIfNotUnsubscribed();
-    });
-
-    _pusherClient.connect(); */
   }
 
   void _loadMessages() async {
@@ -175,6 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages = messages;
       });
     } catch (e) {
+      debugPrint('E: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to load messages: $e'),
@@ -191,13 +140,12 @@ class _ChatScreenState extends State<ChatScreen> {
         widget.user.id,
         _messageController.text,
       );
-      insertMessage(message);
 
-      setState(() {
-        // _messages.add(message);
-        _messageController.clear();
-      });
+      _messageController.clear();
+      insertMessage(message);
     } catch (e) {
+      debugPrint('E: $e');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to send message: $e'),
@@ -216,86 +164,89 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.user.name)),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(
-                maxWidth: 500,
-                minWidth: 300,
-              ),
-              child: ListView.builder(
-                reverse: true,
-                padding: const EdgeInsets.all(16),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  return Directionality(
-                    textDirection: message.receiverId == widget.user.id
-                        ? TextDirection.rtl
-                        : TextDirection.ltr,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      child: ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        tileColor: Colors.grey.shade200,
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16),
-                        dense: true,
-                        title: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'user id: ${message.receiverId}',
-                              style: const TextStyle(fontSize: 8),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              message.message,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        subtitle: Text(
-                          message.createdAt.toString(),
-                          style: const TextStyle(fontSize: 8),
-                        ),
-                      ),
-                    ),
-                  );
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                onSubmitted: (value) {
+                  _sendMessage();
                 },
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    onSubmitted: (value) {
-                      _sendMessage();
-                    },
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter message',
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter message',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(8),
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
+              ),
             ),
+            IconButton(
+              icon: const Icon(Icons.send),
+              onPressed: _sendMessage,
+            ),
+          ],
+        ),
+      ),
+      body: Center(
+        child: Container(
+          alignment: Alignment.center,
+          constraints: const BoxConstraints(
+            maxWidth: 500,
+            minWidth: 300,
           ),
-        ],
+          child: ListView.builder(
+            reverse: true,
+            padding: const EdgeInsets.all(16),
+            itemCount: _messages.length,
+            itemBuilder: (context, index) {
+              final message = _messages[index];
+              return Directionality(
+                textDirection: message.receiverId == widget.user.id
+                    ? TextDirection.rtl
+                    : TextDirection.ltr,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    tileColor: Colors.grey.shade200,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    dense: true,
+                    title: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          (message.receiverId == widget.user.id)
+                              ? 'You'
+                              : widget.user.name,
+                          style: const TextStyle(fontSize: 8),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          message.message,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    subtitle: Text(
+                      message.createdAt.toString(),
+                      style: const TextStyle(fontSize: 8),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

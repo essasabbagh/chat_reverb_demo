@@ -44,6 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'password': _passwordController.text
         }),
       );
+      debugPrint('RESPONSE: ${response.body}');
 
       final responseData = json.decode(response.body);
 
