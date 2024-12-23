@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
@@ -49,7 +50,8 @@ class ChatService {
         },
       ),
     );
-    debugPrint('RESPONSE: ${response.body}');
+    log(' token: $token');
+    log('RESPONSE sendMessage: ${response.body}');
 
     if (response.statusCode == 200) {
       return Message.fromJson(json.decode(response.body));
