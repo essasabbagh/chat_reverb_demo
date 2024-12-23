@@ -181,7 +181,7 @@ class _ChatScreenState extends State<ChatScreen> {
         message.text,
       );
 
-      insertMessage(message);
+      // insertMessage(message);
     } catch (e) {
       debugPrint('E: $e');
 
@@ -208,6 +208,11 @@ class _ChatScreenState extends State<ChatScreen> {
               child: CircularProgressIndicator(),
             )
           : DashChat(
+              // typingUsers: [
+              //   ChatUser(
+              //     id: '22',
+              //   ),
+              // ],
               currentUser: ChatUser(
                 id: userId,
                 firstName: 'Me',
