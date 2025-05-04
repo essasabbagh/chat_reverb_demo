@@ -13,6 +13,8 @@ const String broadcastingUrl = 'http://10.0.2.2:8000/api/broadcasting/auth';
 // const String broadcastingUrl = 'http://chat_app.test/api/broadcasting/auth';
 // const String host = 'localhost';
 
+// php artisan reverb:start --host="0.0.0.0" --port=8080 --hostname="chat_app.test"
+
 const String key = 'vvi9foswtexagmutenwt';
 const int port = 8080; // WebSocket port
 const String scheme = 'ws'; // 'ws' for non-secure connections

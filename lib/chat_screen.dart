@@ -107,7 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
           text: messageData.message,
           user: ChatUser(
             id: messageData.senderId.toString(),
-            profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
+            profileImage: 'https://avatar.iran.liara.run/public',
           ),
         ),
       );
@@ -124,7 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
           text: messageData.message,
           user: ChatUser(
             id: messageData.senderId.toString(),
-            profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
+            profileImage: 'https://avatar.iran.liara.run/public',
           ),
         ),
       );
@@ -155,7 +155,7 @@ class _ChatScreenState extends State<ChatScreen> {
             text: msg.message,
             user: ChatUser(
               id: msg.senderId.toString(),
-              profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
+              profileImage: 'https://avatar.iran.liara.run/public',
             ),
           );
         }).toList();
@@ -217,7 +217,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 id: userId,
                 firstName: 'Me',
                 lastName: '',
-                profileImage: 'https://i.imghippo.com/files/MCY9205iDo.png',
+                profileImage: 'https://avatar.iran.liara.run/public',
               ),
               onSend: _sendMessage,
               messages: _messages,

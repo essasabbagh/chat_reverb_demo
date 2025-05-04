@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:appwrite_demo/logout_button.dart';
 import 'package:flutter/material.dart';
 
 import 'package:http/http.dart' as http;
@@ -80,10 +81,7 @@ class _UsersScreenState extends State<UsersScreen> {
       appBar: AppBar(
         title: const Text('Users'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          )
+          LogoutButton(onLogout: _logout),
         ],
       ),
       body: _isLoading
