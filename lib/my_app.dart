@@ -1,10 +1,5 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 
-import 'package:appwrite_demo/chat_screen.dart';
-
-import 'core/screens/chat_screen.dart';
 import 'login_screen.dart';
 
 class MyApp extends StatelessWidget {

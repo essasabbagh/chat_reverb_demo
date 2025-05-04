@@ -45,6 +45,9 @@ class _ChatScreenState extends State<ChatScreen> {
     _loadMessages();
   }
 
+  // In your _ChatScreenState class, replace the _initializePusher method with this:
+
+  
   void _initializePusher() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -68,13 +71,13 @@ class _ChatScreenState extends State<ChatScreen> {
       },
     );
 
-    // _pusherClient.eventStream.listen((event) {
-    //   log('channelName: ${event.channelName}');
-    //   log('userId: ${event.userId}');
-    //   log('rootObject: ${event.rootObject}');
-    //   log('name: ${event.name}');
-    //   log('data: ${event.data}');
-    // });
+    _pusherClient.eventStream.listen((event) {
+      log('channelName: ${event.channelName}');
+      log('userId: ${event.userId}');
+      log('rootObject: ${event.rootObject}');
+      log('name: ${event.name}');
+      log('data: ${event.data}');
+    });
 
     final publicChannel = _pusherClient.publicChannel(
       publicChannelName,
