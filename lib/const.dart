@@ -7,7 +7,7 @@ const String scheme = 'ws'; // 'ws' for non-secure connections
 /// For local development, web (chrom)
 const String host = '127.0.0.1'; // Your Mac's local IP
 const String baseUrl = 'http://127.0.0.1:8000/api';
-const String broadcastingUrl = 'http://127.0.0.1:8000/api/broadcasting/auth';
+const String broadcastingUrl = '$baseUrl/broadcasting/auth';
 
 // for mac local development
 // const String host = 'chat_app.test';

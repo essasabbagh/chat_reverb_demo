@@ -1,20 +1,18 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:developer';
-
+import 'package:appwrite_demo/providers/chat_provider.dart';
 import 'package:flutter/material.dart';
 
-import 'package:dart_pusher_channels/dart_pusher_channels.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../services/chat_service.dart';
-import '../const.dart';
-import '../models/message.dart';
-import '../models/user.dart';
+// lib/ui/screens/chat_screen.dart
 
-class ChatScreen extends StatefulWidget {
-  final User user;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dash_chat_2/dash_chat_2.dart';
+
+import '../../models/chat_state.dart';
+import '../../models/user.dart' as app_user;
+
+class ChatScreen extends ConsumerStatefulWidget {
+  final app_user.User user;
 
   const ChatScreen({
     super.key,
@@ -22,260 +20,134 @@ class ChatScreen extends StatefulWidget {
   });
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
-  late String userId;
-  bool isLoading = false;
-  List<ChatMessage> _messages = [];
-  late PusherChannelsClient _pusherClient;
-
-  void _getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getInt('userId').toString();
-  }
-
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-
-    _getUserId();
-    _initializePusher();
-    _loadMessages();
+    // Load messages when the screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(chatProvider(widget.user.id).notifier)
+          .loadMessages(widget.user.id);
+    });
   }
 
-  // In your _ChatScreenState class, replace the _initializePusher method with this:
-
-  void _initializePusher() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final token = prefs.getString('token');
-    PusherChannelsPackageLogger.enableLogs();
-
-    const options = PusherChannelsOptions.fromHost(
-      scheme: scheme,
-      host: host,
-      key: key,
-      port: port,
-      shouldSupplyMetadataQueries: true,
-      metadata: PusherChannelsOptionsMetadata.byDefault(),
-    );
-
-    _pusherClient = PusherChannelsClient.websocket(
-      options: options,
-      connectionErrorHandler: (exception, trace, refresh) {
-        log('Connection error: $exception');
-        refresh();
-      },
-    );
-
-    _pusherClient.eventStream.listen((event) {
-      log('channelName: ${event.channelName}');
-      log('userId: ${event.userId}');
-      log('rootObject: ${event.rootObject}');
-      log('name: ${event.name}');
-      log('data: ${event.data}');
-    });
-
-    final publicChannel = _pusherClient.publicChannel(
-      publicChannelName,
-    );
-
-    final privateChannel = _pusherClient.privateChannel(
-      'private-chat.$userId',
-      authorizationDelegate:
-          EndpointAuthorizableChannelTokenAuthorizationDelegate
-              .forPrivateChannel(
-        authorizationEndpoint: Uri.parse(broadcastingUrl),
-        onAuthFailed: (exception, trace) {
-          final ex = exception
-              as EndpointAuthorizableChannelTokenAuthorizationException;
-          log('EXCEPTION: ${ex.message}');
-        },
-        headers: {
-          'Authorization': 'Bearer $token', // Send user's auth token
-        },
-      ),
-    );
-
-    StreamSubscription<ChannelReadEvent> channelSubscription =
-        publicChannel.bind(eventName).listen((event) {
-      log('public event received: ${event.data}');
-      final messageData = Message.fromJson(json.decode(event.data));
-      insertMessage(
-        ChatMessage(
-          createdAt: messageData.createdAt,
-          text: messageData.message,
-          user: ChatUser(
-            id: messageData.senderId.toString(),
-            profileImage: 'https://avatar.iran.liara.run/public',
-          ),
-        ),
-      );
-    });
-
-    StreamSubscription<ChannelReadEvent> privateSubscription =
-        privateChannel.bind(eventName).listen((event) {
-      log('Private event received: ${event.data}');
-      log('Received private message: $event');
-      final messageData = Message.fromJson(json.decode(event.data));
-      insertMessage(
-        ChatMessage(
-          createdAt: messageData.createdAt,
-          text: messageData.message,
-          user: ChatUser(
-            id: messageData.senderId.toString(),
-            profileImage: 'https://avatar.iran.liara.run/public',
-          ),
-        ),
-      );
-    });
-
-    _pusherClient.onConnectionEstablished.listen((s) {
-      log('Connection established');
-      // publicChannel.subscribe();
-      privateChannel.subscribe();
-    });
-
-    // Connect with the client
-    unawaited(_pusherClient.connect());
-  }
-
-  void _loadMessages() async {
-    try {
-      setState(() {
-        isLoading = true;
-      });
-      final messages = await ChatService().getMessages(
-        widget.user.id,
-      );
-      setState(() {
-        _messages = messages.reversed.map((msg) {
-          return ChatMessage(
-            createdAt: msg.createdAt,
-            text: msg.message,
-            user: ChatUser(
-              id: msg.senderId.toString(),
-              profileImage: 'https://avatar.iran.liara.run/public',
-            ),
-          );
-        }).toList();
-      });
-    } catch (e) {
-      debugPrint('E: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load messages: $e'),
-        ),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  void _sendMessage(ChatMessage message) async {
-    try {
-      final res = await ChatService().sendMessage(
-        widget.user.id,
-        message.text,
-      );
-
-      insertMessage(message);
-    } catch (e) {
-      debugPrint('E: $e');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to send message: $e'),
-        ),
-      );
-    }
-  }
-
-  void insertMessage(ChatMessage message) {
-    setState(() {
-      _messages.insert(0, message);
-    });
+  void _sendMessage(ChatMessage message) {
+    ref.read(chatProvider(widget.user.id).notifier).sendMessage(
+          widget.user.id,
+          message,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch the chat state for this specific user
+    final chatState = ref.watch(chatProvider(widget.user.id));
+    // Watch the current user
+    final currentUserAsync = ref.watch(currentUserProvider);
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.user.name)),
-      body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(),
-            )
-          : DashChat(
-              messages: _messages,
-              onSend: _sendMessage,
-              currentUser: ChatUser(
-                id: userId,
-                firstName: 'Me',
-                lastName: '',
-                profileImage: 'https://avatar.iran.liara.run/public',
-              ),
-              inputOptions: InputOptions(
-                inputTextStyle: TextStyle(
-                  color: Colors.grey.shade900,
-                ),
-                inputDecoration: InputDecoration(
-                  isDense: true,
-                  filled: true,
-                  fillColor: Colors.grey.shade200,
-                  contentPadding: const EdgeInsets.only(
-                    left: 18,
-                    top: 10,
-                    bottom: 10,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(
-                      width: 0,
-                      style: BorderStyle.none,
-                    ),
-                  ),
-                ),
-              ),
-              messageOptions: MessageOptions(
-                containerColor: Colors.grey.shade200,
-                currentUserContainerColor: Colors.grey.shade200,
-                currentUserTextColor: Colors.black87,
-                currentUserTimeTextColor: Colors.black38,
-                messagePadding: EdgeInsets.fromLTRB(12, 8, 12, 8),
-                showTime: true,
-                spaceWhenAvatarIsHidden: 6,
-                textColor: Colors.black87,
-                timeFontSize: 8,
-                timePadding: EdgeInsets.only(top: 2),
-                timeTextColor: Colors.black26,
-              ),
-              messageListOptions: MessageListOptions(
-                scrollPhysics: AlwaysScrollableScrollPhysics(),
-                dateSeparatorBuilder: (date) => DefaultDateSeparator(
-                  date: date,
-                  textStyle: const TextStyle(
-                    color: Colors.black54,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onLoadEarlier: () async {
-                  await Future.delayed(const Duration(seconds: 2));
-                },
-              ),
-            ),
+      body: currentUserAsync.when(
+        data: (currentUser) {
+          return _buildChatUI(chatState, currentUser);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => Center(
+          child: Text('Error loading user: $error'),
+        ),
+      ),
     );
   }
 
-  @override
-  void dispose() {
-    _pusherClient.dispose();
-    super.dispose();
+  Widget _buildChatUI(ChatState chatState, ChatUser currentUser) {
+    switch (chatState.status) {
+      case ChatStatus.loading:
+        return const Center(child: CircularProgressIndicator());
+
+      case ChatStatus.error:
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: ${chatState.errorMessage}'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref
+                      .read(chatProvider(widget.user.id).notifier)
+                      .loadMessages(widget.user.id);
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        );
+
+      case ChatStatus.loaded:
+      case ChatStatus.initial:
+        return DashChat(
+          messages: chatState.messages,
+          onSend: _sendMessage,
+          currentUser: currentUser,
+          inputOptions: InputOptions(
+            inputTextStyle: TextStyle(
+              color: Colors.grey.shade900,
+            ),
+            inputDecoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: Colors.grey.shade200,
+              contentPadding: const EdgeInsets.only(
+                left: 18,
+                top: 10,
+                bottom: 10,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25),
+                borderSide: const BorderSide(
+                  width: 0,
+                  style: BorderStyle.none,
+                ),
+              ),
+            ),
+          ),
+          messageOptions: MessageOptions(
+            containerColor: Colors.grey.shade200,
+            currentUserContainerColor: Colors.grey.shade200,
+            currentUserTextColor: Colors.black87,
+            currentUserTimeTextColor: Colors.black38,
+            messagePadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            showTime: true,
+            spaceWhenAvatarIsHidden: 6,
+            textColor: Colors.black87,
+            timeFontSize: 8,
+            timePadding: const EdgeInsets.only(top: 2),
+            timeTextColor: Colors.black26,
+          ),
+          messageListOptions: MessageListOptions(
+            scrollPhysics: const AlwaysScrollableScrollPhysics(),
+            dateSeparatorBuilder: (date) => DefaultDateSeparator(
+              date: date,
+              textStyle: const TextStyle(
+                color: Colors.black54,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            onLoadEarlier: chatState.isLoadingMore
+                ? null
+                : () async {
+                    await ref
+                        .read(chatProvider(widget.user.id).notifier)
+                        .loadMoreMessages();
+                  },
+          ),
+        );
+    }
   }
 }
-
 
 // https://api.flutter.dev/flutter/widgets/AnimatedList-class.html
