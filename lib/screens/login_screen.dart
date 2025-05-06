@@ -107,6 +107,27 @@ class _LoginScreenState extends State<LoginScreen> {
             _isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(onPressed: _login, child: const Text('Login')),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    _emailController.text = 'new@example.com';
+                    _login();
+                  },
+                  child: const Text('new'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _emailController.text = 'old@example.com';
+
+                    _login();
+                  },
+                  child: const Text('old'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

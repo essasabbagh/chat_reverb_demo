@@ -1,4 +1,8 @@
-# appwrite_demo
+
+
+flutter run -d chrome   
+
+
 
 
 

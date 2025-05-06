@@ -1,5 +1,8 @@
 const String publicChannelName = 'messages';
 const eventName = 'App\\Events\\MessageSent';
+const String key = 'vvi9foswtexagmutenwt';
+const int port = 8080; // WebSocket port
+const String scheme = 'ws'; // 'ws' for non-secure connections
 
 // const String host = '192.168.1.5'; // Your Mac's local IP
 // const String baseUrl = 'http://10.0.2.2:8000/api';
@@ -17,10 +20,7 @@ const String host = 'chat_app.test';
 const String baseUrl = 'http://chat_app.test/api';
 const String broadcastingUrl = 'http://chat_app.test/api/broadcasting/auth';
 
-// php artisan reverb:start --host="0.0.0.0" --port=8080 --hostname="chat_app.test"
-// php artisan reverb:start --host="0.0.0.0" --port=8000 --hostname="192.168.1.5"
 
-const String key = 'vvi9foswtexagmutenwt';
-const int port = 8080; // WebSocket port
-const String scheme = 'ws'; // 'ws' for non-secure connections
+
+
 
