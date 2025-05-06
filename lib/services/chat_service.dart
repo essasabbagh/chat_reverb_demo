@@ -5,9 +5,9 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:appwrite_demo/message.dart';
+import 'package:appwrite_demo/models/message.dart';
 
-import 'const.dart';
+import '../const.dart';
 
 class ChatService {
   Future<List<Message>> getMessages(int receiverId) async {

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:appwrite_demo/const.dart';
-import 'package:appwrite_demo/users_screen.dart';
+import 'package:appwrite_demo/screens/users_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

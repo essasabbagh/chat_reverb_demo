@@ -8,10 +8,10 @@ import 'package:dart_pusher_channels/dart_pusher_channels.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'chat_service.dart';
-import 'const.dart';
-import 'message.dart';
-import 'user.dart';
+import '../services/chat_service.dart';
+import '../const.dart';
+import '../models/message.dart';
+import '../models/user.dart';
 
 class ChatScreen extends StatefulWidget {
   final User user;
@@ -135,7 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _pusherClient.onConnectionEstablished.listen((s) {
       log('Connection established');
-      publicChannel.subscribe();
+      // publicChannel.subscribe();
       privateChannel.subscribe();
     });
 

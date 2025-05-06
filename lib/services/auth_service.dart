@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'const.dart';
+import '../const.dart';
 
 class AuthService {
   // static const String baseUrl = 'https://your-api-url.com/api';

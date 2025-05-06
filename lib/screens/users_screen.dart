@@ -1,16 +1,16 @@
 import 'dart:convert';
 
-import 'package:appwrite_demo/logout_button.dart';
+import 'package:appwrite_demo/widgets/logout_button.dart';
 import 'package:flutter/material.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:appwrite_demo/login_screen.dart';
+import 'package:appwrite_demo/screens/login_screen.dart';
 
 import 'chat_screen.dart';
-import 'const.dart';
-import 'user.dart';
+import '../const.dart';
+import '../models/user.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
