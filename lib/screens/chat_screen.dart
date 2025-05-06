@@ -31,7 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
   List<ChatMessage> _messages = [];
   late PusherChannelsClient _pusherClient;
 
-  void getUserId() async {
+  void _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     userId = prefs.getInt('userId').toString();
   }
@@ -40,14 +40,13 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
 
-    getUserId();
+    _getUserId();
     _initializePusher();
     _loadMessages();
   }
 
   // In your _ChatScreenState class, replace the _initializePusher method with this:
 
-  
   void _initializePusher() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -184,7 +183,7 @@ class _ChatScreenState extends State<ChatScreen> {
         message.text,
       );
 
-      // insertMessage(message);
+      insertMessage(message);
     } catch (e) {
       debugPrint('E: $e');
 
@@ -211,24 +210,14 @@ class _ChatScreenState extends State<ChatScreen> {
               child: CircularProgressIndicator(),
             )
           : DashChat(
-              // typingUsers: [
-              //   ChatUser(
-              //     id: '22',
-              //   ),
-              // ],
+              messages: _messages,
+              onSend: _sendMessage,
               currentUser: ChatUser(
                 id: userId,
                 firstName: 'Me',
                 lastName: '',
                 profileImage: 'https://avatar.iran.liara.run/public',
               ),
-              onSend: _sendMessage,
-              messages: _messages,
-              // typingUsers: <ChatUser>[
-              //   ChatUser(
-              //     id: '22',
-              //   ),
-              // ],
               inputOptions: InputOptions(
                 inputTextStyle: TextStyle(
                   color: Colors.grey.shade900,
@@ -265,6 +254,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 timeTextColor: Colors.black26,
               ),
               messageListOptions: MessageListOptions(
+                scrollPhysics: AlwaysScrollableScrollPhysics(),
                 dateSeparatorBuilder: (date) => DefaultDateSeparator(
                   date: date,
                   textStyle: const TextStyle(
@@ -275,93 +265,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 onLoadEarlier: () async {
                   await Future.delayed(const Duration(seconds: 2));
                 },
-                scrollPhysics: AlwaysScrollableScrollPhysics(),
               ),
             ),
-      // bottomNavigationBar: Padding(
-      //   padding: const EdgeInsets.all(16.0),
-      //   child: Row(
-      //     children: [
-      //       Expanded(
-      //         child: TextField(
-      //           onSubmitted: (value) {
-      //             _sendMessage();
-      //           },
-      //           controller: _messageController,
-      //           decoration: const InputDecoration(
-      //             hintText: 'Enter message',
-      //             border: OutlineInputBorder(
-      //               borderRadius: BorderRadius.all(
-      //                 Radius.circular(8),
-      //               ),
-      //             ),
-      //           ),
-      //         ),
-      //       ),
-      //       IconButton(
-      //         icon: const Icon(Icons.send),
-      //         onPressed: _sendMessage,
-      //       ),
-      //     ],
-      //   ),
-      // ),
-      // body: Center(
-      //   child: Container(
-      //     alignment: Alignment.center,
-      //     constraints: const BoxConstraints(
-      //       maxWidth: 500,
-      //       minWidth: 300,
-      //     ),
-      //     child: ListView.builder(
-      //       reverse: true,
-      //       padding: const EdgeInsets.all(16),
-      //       itemCount: _messages.length,
-      //       itemBuilder: (context, index) {
-      //         final message = _messages[index];
-      //         return Directionality(
-      //           textDirection: message.receiverId == widget.user.id
-      //               ? TextDirection.rtl
-      //               : TextDirection.ltr,
-      //           child: Padding(
-      //             padding: const EdgeInsets.symmetric(
-      //               horizontal: 8,
-      //               vertical: 4,
-      //             ),
-      //             child: ListTile(
-      //               shape: RoundedRectangleBorder(
-      //                 borderRadius: BorderRadius.circular(8),
-      //               ),
-      //               tileColor: Colors.grey.shade200,
-      //               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      //               dense: true,
-      //               title: Column(
-      //                 mainAxisAlignment: MainAxisAlignment.start,
-      //                 crossAxisAlignment: CrossAxisAlignment.start,
-      //                 children: [
-      //                   Text(
-      //                     (message.receiverId == widget.user.id)
-      //                         ? 'You'
-      //                         : widget.user.name,
-      //                     style: const TextStyle(fontSize: 8),
-      //                   ),
-      //                   const SizedBox(height: 4),
-      //                   Text(
-      //                     message.message,
-      //                     style: const TextStyle(fontSize: 12),
-      //                   ),
-      //                 ],
-      //               ),
-      //               subtitle: Text(
-      //                 message.createdAt.toString(),
-      //                 style: const TextStyle(fontSize: 8),
-      //               ),
-      //             ),
-      //           ),
-      //         );
-      //       },
-      //     ),
-      //   ),
-      // ),
     );
   }
 
